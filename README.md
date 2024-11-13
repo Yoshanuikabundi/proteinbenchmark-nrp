@@ -2,6 +2,18 @@
 
 Files for running [`proteinbenchmark`] on NRP.
 
+## Configuring a benchmark
+
+| To configure...                      | Look in the file...                  |
+|--------------------------------------|--------------------------------------|
+| `proteinbenchmark` branch/commit/rev | Dockerfile                           |
+| Number of replicas                   | populate_queue.py                    |
+| Targets to benchmark                 | populate_queue.py                    |
+| Resources of each worker pod         | proteinbenchmark_jm_worker.yaml      |
+| Number of worker pods                | proteinbenchmark_jm_worker.yaml      |
+| Disk quota for outputs               | proteinbenchmark_jm_workervol.yaml   |
+| Expected time to complete an item    | worker.py                            |
+
 ## Starting a benchmark
 
 1. Start the redis PVC. This is a persistent disk volume that stores the status of the queue in case the redis server restarts:
