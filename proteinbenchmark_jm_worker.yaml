@@ -34,7 +34,7 @@ spec:
               readOnly: false
       containers:
         - name: pdbscan-jm-worker
-          image: gitlab-registry.nrp-nautilus.io/josh.mitchell/pdb-census:latest
+          image: gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp:latest
           resources:
             limits:
               memory: "5Gi"
