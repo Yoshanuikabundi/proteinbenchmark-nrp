@@ -1,6 +1,6 @@
-# proteinbenchmark-nrp
+# proteinbenchmark-nrp WIP
 
-Files for running [`proteinbenchmark`] on NRP.
+WIP files for running [`proteinbenchmark`] on NRP.
 
 ## Configuring a benchmark
 
