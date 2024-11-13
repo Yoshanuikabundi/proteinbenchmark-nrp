@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: proteinbenchmark-jm-worker
+spec:
+  parallelism: 1
+  template:
+    spec:
+      restartPolicy: Never
+      # restartPolicy: OnFailure
+      initContainers:
+        - name: proteinbenchmark-jm-init-worker
+          image: alpine/git
+          resources:
+            limits:
+              memory: "100Mi"
+              cpu: "100m"
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+          env:
+          command:
+            - "/bin/sh"
+            - "-c"
+            - >-
+              cd /opt/repo
+              && git clone https://gitlab.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp.git
+              && chmod 777 /data
+          volumeMounts:
+            - mountPath: /opt/repo
+              name: proteinbenchmark-jm-repos
+            - mountPath: /data
+              name: workervol
+              readOnly: false
+      containers:
+        - name: pdbscan-jm-worker
+          image: gitlab-registry.nrp-nautilus.io/josh.mitchell/pdb-census:latest
+          resources:
+            limits:
+              memory: "5Gi"
+              cpu: "1"
+            requests:
+              memory: "5Gi"
+              cpu: "1"
+          command:
+            - micromamba
+            - run
+            - -n
+            - base
+            - python
+            - "/opt/repo/proteinbenchmark_exec/worker.py"
+          volumeMounts:
+            - mountPath: /opt/repo
+              name: proteinbenchmark-jm-repos
+            - name: rclone-config
+              mountPath: /secrets/rclone.conf
+              subPath: rclone.conf
+            - mountPath: /data
+              name: workervol
+              readOnly: false
+      volumes:
+        - name: proteinbenchmark-jm-repos
+          emptyDir: {}
+        - name: rclone-config
+          secret:
+            secretName: jm-rclone-config
+        - name: workervol
+          persistentVolumeClaim:
+            claimName: proteinbenchmark-jm-workervol
