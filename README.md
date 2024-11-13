@@ -6,13 +6,19 @@ Files for running [`proteinbenchmark`] on NRP.
 
 | To configure...                      | Look in the file...                  |
 |--------------------------------------|--------------------------------------|
-| `proteinbenchmark` branch/commit/rev | Dockerfile                           |
+| `proteinbenchmark` branch/commit/rev | Dockerfile (requires image rebuild)  |
 | Number of replicas                   | populate_queue.py                    |
 | Targets to benchmark                 | populate_queue.py                    |
 | Resources of each worker pod         | proteinbenchmark_jm_worker.yaml      |
 | Number of worker pods                | proteinbenchmark_jm_worker.yaml      |
 | Disk quota for outputs               | proteinbenchmark_jm_workervol.yaml   |
 | Expected time to complete an item    | worker.py                            |
+
+Changes to the Kubernetes `.yaml` files are applied when you run `kubectl apply -f file.yaml`. Changes to `worker.py` and `rediswq.py` must be pushed to the NRP GitLab repository and then will take effect on any new pods. Changes to the Dockerfile require the image to be rebuilt and pushed to the NRP GitLab Docker registry, from which point they will take effect on any new pods. To rebuild the Docker image and push to the NRP GitLab Docker registry:
+```shell
+docker build -t gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp .
+docker push gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp
+```
 
 ## Starting a benchmark
 
