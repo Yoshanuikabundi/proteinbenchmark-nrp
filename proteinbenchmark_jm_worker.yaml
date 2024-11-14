@@ -33,7 +33,7 @@ spec:
               name: workervol
               readOnly: false
       containers:
-        - name: pdbscan-jm-worker
+        - name: proteinbenchmark-jm-worker
           image: gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp:latest
           resources:
             limits:
