@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: proteinbenchmark-jm
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              # Require compatibility with CUDA 12.2
+              - key: nvidia.com/cuda.runtime.major
+                operator: In
+                values:
+                  - "12"
+              - key: nvidia.com/cuda.runtime.minor
+                operator: In
+                values:
+                  - "2"
+  initContainers:
+    - name: proteinbenchmark-jm-init
+      image: alpine/git
+      resources:
+        limits:
+          memory: "100Mi"
+          cpu: "100m"
+        requests:
+          memory: "100Mi"
+          cpu: "100m"
+      volumeMounts:
+        - mountPath: /opt/repo
+          name: proteinbenchmark-jm-repos
+      command:
+        - "/bin/sh"
+        - "-c"
+        - >-
+          cd /opt/repo
+          && git clone https://gitlab.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp.git .
+          && git checkout $SCRIPT_COMMIT
+  containers:
+    - name: proteinbenchmark-jm
+      image: gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp:latest
+      resources:
+        limits:
+          memory: "5Gi"
+          cpu: "1"
+          nvidia.com/gpu: 1
+        requests:
+          memory: "5Gi"
+          cpu: "1"
+          nvidia.com/gpu: 1
+      volumeMounts:
+        - mountPath: /opt/repo
+          name: proteinbenchmark-jm-repos
+        - name: rclone-config
+          mountPath: /secrets/rclone.conf
+          subPath: rclone.conf
+        - mountPath: /data
+          name: workervol
+          readOnly: false
+        - name: openeye-license
+          mountPath: /secrets/oe_license.txt
+          subPath: oe_license.txt
+      env:
+        - name: OE_LICENSE
+          value: /secrets/oe_license.txt
+      command:
+        - micromamba
+        - run
+        - -n
+        - base
+        - python
+        - $SCRIPT_PATH
+        - -f
+        - $FF
+        - -t
+        - $TARGET
+        - -r
+        - $REPLICA
+        - -w
+        - $WINDOW
+        - -o
+        - $RESULT_DIR
+  volumes:
+    - name: proteinbenchmark-jm-repos
+      emptyDir: {}
+    - name: rclone-config
+      secret:
+        secretName: jm-rclone-config
+    - name: openeye-license
+      secret:
+        secretName: oe-license-feb-2024

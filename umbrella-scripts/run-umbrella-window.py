@@ -442,7 +442,7 @@ def main(
     target,
     window_index,
 ):
-    umbrella_energy_constant = 10000.0 * openmm_unit.kilocalorie_per_mole
+    umbrella_energy_constant = 5000.0 * openmm_unit.kilocalorie_per_mole
 
     # 31 windows sampling Q = 1.0 to 0.4 in steps of 0.02
     umbrella_centers = numpy.linspace(1.0, 0.4, 31)

@@ -72,10 +72,8 @@ class CompletableWorkQueue(WorkQueue):
 def main():
     print("Connecting to queue")
 
-    host = "pdbscan-jm-redis"
-
     db = Redis(host="pdbscan-jm-redis")
-    q = CompletableWorkQueue(KeyPrefix("job2"))
+    q = CompletableWorkQueue(KeyPrefix("proteinbenchmark"))
 
     print("Worker with sessionID: " + q._session)
     print(

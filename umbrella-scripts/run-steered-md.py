@@ -1,11 +1,9 @@
 from pathlib import Path
 
 import click
-import loos
 import numpy
 import openmm
 import pandas
-from loos.pyloos import Trajectory
 from openmm import app
 from openmm import unit as openmm_unit
 from proteinbenchmark import (

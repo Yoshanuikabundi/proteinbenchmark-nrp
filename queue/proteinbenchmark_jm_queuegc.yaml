@@ -32,5 +32,5 @@ spec:
               db = Redis(host='pdbscan-jm-redis')
               q = WorkQueue(KeyPrefix('job2'))
 
-              # Tasks take long enough that we may as well just deep clean
+              # This runs infrequently enough that we may as well just deep clean
               q.deep_clean(db)
