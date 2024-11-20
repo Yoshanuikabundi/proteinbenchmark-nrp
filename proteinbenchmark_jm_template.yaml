@@ -8,7 +8,11 @@ spec:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-              # Require compatibility with CUDA 12.2
+              # Require compatibility with CUDA 12.4
+              # This version needs to be specified in the dockerfile `FROM` and
+              # `RUN micromamba install` lines too
+              # Check the version used by NRP nodes with:
+              # kubectl get nodes -L nvidia.com/gpu.product,nvidia.com/cuda.runtime.major,nvidia.com/cuda.runtime.minor -l nvidia.com/gpu.product
               - key: nvidia.com/cuda.runtime.major
                 operator: In
                 values:
@@ -16,27 +20,7 @@ spec:
               - key: nvidia.com/cuda.runtime.minor
                 operator: In
                 values:
-                  - "2"
-  initContainers:
-    - name: proteinbenchmark-jm-init
-      image: alpine/git
-      resources:
-        limits:
-          memory: "100Mi"
-          cpu: "100m"
-        requests:
-          memory: "100Mi"
-          cpu: "100m"
-      volumeMounts:
-        - mountPath: /opt/repo
-          name: proteinbenchmark-jm-repos
-      command:
-        - "/bin/sh"
-        - "-c"
-        - >-
-          cd /opt/repo
-          && git clone https://gitlab.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp.git .
-          && git checkout $SCRIPT_COMMIT
+                  - "4"
   containers:
     - name: proteinbenchmark-jm
       image: gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp:latest
@@ -55,9 +39,6 @@ spec:
         - name: rclone-config
           mountPath: /secrets/rclone.conf
           subPath: rclone.conf
-        - mountPath: /data
-          name: workervol
-          readOnly: false
         - name: openeye-license
           mountPath: /secrets/oe_license.txt
           subPath: oe_license.txt
@@ -65,22 +46,16 @@ spec:
         - name: OE_LICENSE
           value: /secrets/oe_license.txt
       command:
-        - micromamba
-        - run
-        - -n
-        - base
-        - python
-        - $SCRIPT_PATH
-        - -f
-        - $FF
-        - -t
-        - $TARGET
-        - -r
-        - $REPLICA
-        - -w
-        - $WINDOW
-        - -o
-        - $RESULT_DIR
+        - "/bin/sh"
+        - "-c"
+        - |
+          set -euf -o pipefail
+          git clone https://gitlab.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp.git /opt/repo
+          cd /opt/repo
+          git checkout $SCRIPT_COMMIT
+          mkdir /results
+          rclone mount --daemon nrp-internal:proteinbenchmark-jm-bucket/results /results
+          micromamba run -n base python $SCRIPT_PATH -f $FF -t $TARGET -r $REPLICA -w $WINDOW -o /results
   volumes:
     - name: proteinbenchmark-jm-repos
       emptyDir: {}

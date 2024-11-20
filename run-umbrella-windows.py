@@ -9,7 +9,7 @@ from typing import Any
 import yaml
 
 SCRIPT_PATH = Path("umbrella-scripts/run-umbrella-window.py")
-RESULT_DIR = Path("results")
+LOCAL_RESULT_DIR = Path("results")
 TARGET = "gb3"
 FF = "null-0.0.3-pair-opc3"
 N_REPLICAS = 1
@@ -21,10 +21,11 @@ def main():
         template = yaml.safe_load(f)
     for replica in range(1, N_REPLICAS + 1):
         for window in range(N_WINDOWS):
-            target_dir = Path(RESULT_DIR, f"{TARGET}-{FF}")
-            replica_dir = target_dir / f"replica-{replica}"
             k8s_manifest_path = (
-                replica_dir / f"{TARGET}-{FF}-{replica}-{window:02d}.yaml"
+                LOCAL_RESULT_DIR
+                / f"{TARGET}-{FF}"
+                / f"replica-{replica}"
+                / f"{TARGET}-{FF}-{replica}-{window:02d}.yaml"
             )
 
             manifest = rename_template(
@@ -35,12 +36,11 @@ def main():
                         "TARGET": TARGET,
                         "FF": FF,
                         "WINDOW": window,
-                        "RESULT_DIR": RESULT_DIR,
                         "SCRIPT_COMMIT": get_script_commit(),
                         "SCRIPT_PATH": SCRIPT_PATH,
                     },
                 ),
-                append=f"-{TARGET}-{FF}-{replica}-{window:02d}",
+                append=f"-{TARGET}-{FF}-{replica}-{window:02d}".replace(".", ""),
             )
 
             requested_resources = {"memory": "4Gi", "cpu": "1", "nvidia.com/gpu": "1"}
@@ -110,9 +110,9 @@ def get_script_commit() -> str:
 
 
 def get_containers(manifest):
-    for container in manifest["spec"]["initContainers"]:
+    for container in manifest["spec"].get("initContainers", []):
         yield container
-    for container in manifest["spec"]["containers"]:
+    for container in manifest["spec"].get("containers", []):
         yield container
 
 

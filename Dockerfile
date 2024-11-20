@@ -1,4 +1,4 @@
-FROM mambaorg/micromamba:2-cuda12.2.2-ubuntu22.04
+FROM mambaorg/micromamba:2-cuda12.4.1-ubuntu22.04
 
 ARG BRANCH=nagl
 ARG REPO=openforcefield/proteinbenchmark
@@ -13,7 +13,7 @@ ADD --chown=$MAMBA_USER:$MAMBA_USER \
     https://github.com/$REPO/raw/refs/heads/$BRANCH/$ENV_PATH \
     /tmp/env.yaml
 
-RUN micromamba install -y -n base click openff-nagl 'python<3.12' -f /tmp/env.yaml &&\
+RUN micromamba install click openff-nagl 'cuda-version==12.4' 'python<3.12' -y -n base -f /tmp/env.yaml &&\
     micromamba clean --all --yes &&\
     micromamba list
 
