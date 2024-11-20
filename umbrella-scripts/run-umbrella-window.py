@@ -573,7 +573,7 @@ def main(
         barostat_frequency = OPENMM_BAROSTAT_FREQUENCY
 
     timestep = 4.0 * openmm_unit.femtosecond
-    traj_length = 1.0 * openmm_unit.nanosecond
+    traj_length = 500.0 * openmm_unit.nanosecond
     frame_length = 100.0 * openmm_unit.picosecond
     checkpoint_length = frame_length * 100
     save_state_length = checkpoint_length * 10
