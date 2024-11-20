@@ -49,7 +49,7 @@ spec:
         - "/bin/sh"
         - "-c"
         - |
-          set -euf -o pipefail
+          set -euf
           git clone https://gitlab.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp.git /opt/repo
           cd /opt/repo
           git checkout $SCRIPT_COMMIT
