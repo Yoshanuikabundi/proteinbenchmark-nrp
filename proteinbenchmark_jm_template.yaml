@@ -21,9 +21,58 @@ spec:
                 operator: In
                 values:
                   - "4"
+  initContainers:
+    - name: proteinbenchmark-jm-init-git
+      image: alpine/git
+      resources:
+        limits:
+          memory: "100Mi"
+          cpu: "100m"
+        requests:
+          memory: "100Mi"
+          cpu: "100m"
+      command:
+        - "/bin/sh"
+        - "-c"
+        - |
+          set -euf
+          cd /opt/repo
+          git clone https://github.com/Yoshanuikabundi/proteinbenchmark-nrp.git /opt/repo || true
+          git checkout $SCRIPT_COMMIT
+      volumeMounts:
+        - mountPath: /opt/repo
+          name: repo-vol
+    - name: proteinbenchmark-jm-init-rclone
+      image: rclone/rclone
+      resources:
+        limits:
+          memory: "100Mi"
+          cpu: "100m"
+        requests:
+          memory: "100Mi"
+          cpu: "100m"
+      env:
+        - name: RCLONE_CONFIG
+          value: /secrets/rclone.conf
+      command:
+        - "/bin/sh"
+        - "-c"
+        - |
+          set -euf
+          rclone copy nrp-internal:proteinbenchmark-jm-bucket/results /results
+          ls /results
+          ls /results/gb3-null-0.0.3-pair-opc3/setup/
+          chmod -R 777 /results
+      volumeMounts:
+        - mountPath: /results
+          name: results-vol
+        - name: rclone-config
+          mountPath: /secrets/rclone.conf
+          subPath: rclone.conf
   containers:
     - name: proteinbenchmark-jm
-      image: gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp:latest
+      # image: gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp:latest
+      image: ghcr.io/lilyminium/openff-images:proteinbenchmark-simulation-nagl-rclone-cuda12.4
       resources:
         limits:
           memory: "5Gi"
@@ -40,23 +89,35 @@ spec:
         - name: openeye-license
           mountPath: /secrets/oe_license.txt
           subPath: oe_license.txt
+        - mountPath: /opt/repo
+          name: repo-vol
+        - mountPath: /results
+          name: results-vol
       env:
         - name: OE_LICENSE
           value: /secrets/oe_license.txt
         - name: RCLONE_CONFIG
           value: /secrets/rclone.conf
       command:
-        - "/bin/sh"
-        - "-c"
-        - |
-          set -euf
-          git clone https://github.com/Yoshanuikabundi/proteinbenchmark-nrp.git repo
-          cd repo
-          git checkout $SCRIPT_COMMIT
-          mkdir results
-          rclone mount --daemon nrp-internal:proteinbenchmark-jm-bucket/results results
-          ls results/gb3-null-0.0.3-pair-opc3/setup/
-          micromamba run -n base python $SCRIPT_PATH -f $FF -t $TARGET -r $REPLICA -w $WINDOW -o results
+        - micromamba
+        - run
+        - -n
+        - base
+        - python
+        - /opt/repo/$(SCRIPT_PATH)
+        - -f$(FF)
+        - -t$(TARGET)
+        - -r$(REPLICA)
+        - -w$(WINDOW)
+        - -o/results
+      lifecycle:
+        preStop:
+          exec:
+            command:
+              - rclone
+              - copy
+              - /results
+              - nrp-internal:proteinbenchmark-jm-bucket/results
   volumes:
     - name: rclone-config
       secret:
@@ -64,3 +125,7 @@ spec:
     - name: openeye-license
       secret:
         secretName: oe-license-feb-2024
+    - name: repo-vol
+      emptyDir: {}
+    - name: results-vol
+      emptyDir: {}
