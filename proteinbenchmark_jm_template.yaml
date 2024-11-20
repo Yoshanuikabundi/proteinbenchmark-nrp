@@ -43,6 +43,8 @@ spec:
       env:
         - name: OE_LICENSE
           value: /secrets/oe_license.txt
+        - name: RCLONE_CONFIG
+          value: /secrets/rclone.conf
       command:
         - "/bin/sh"
         - "-c"
