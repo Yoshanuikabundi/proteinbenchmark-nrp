@@ -34,8 +34,6 @@ spec:
           cpu: "1"
           nvidia.com/gpu: 1
       volumeMounts:
-        - mountPath: /opt/repo
-          name: proteinbenchmark-jm-repos
         - name: rclone-config
           mountPath: /secrets/rclone.conf
           subPath: rclone.conf
@@ -50,15 +48,13 @@ spec:
         - "-c"
         - |
           set -euf
-          git clone https://gitlab.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp.git /opt/repo
-          cd /opt/repo
+          git clone https://github.com/Yoshanuikabundi/proteinbenchmark-nrp.git repo
+          cd repo
           git checkout $SCRIPT_COMMIT
-          mkdir /results
-          rclone mount --daemon nrp-internal:proteinbenchmark-jm-bucket/results /results
-          micromamba run -n base python $SCRIPT_PATH -f $FF -t $TARGET -r $REPLICA -w $WINDOW -o /results
+          mkdir $PWD/../results
+          rclone mount --daemon nrp-internal:proteinbenchmark-jm-bucket/results $PWD/../results
+          micromamba run -n base python $SCRIPT_PATH -f $FF -t $TARGET -r $REPLICA -w $WINDOW -o $PWD/../results
   volumes:
-    - name: proteinbenchmark-jm-repos
-      emptyDir: {}
     - name: rclone-config
       secret:
         secretName: jm-rclone-config
