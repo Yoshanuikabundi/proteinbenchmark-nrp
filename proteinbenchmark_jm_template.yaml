@@ -3,6 +3,7 @@ kind: Pod
 metadata:
   name: proteinbenchmark-jm
 spec:
+  restartPolicy: OnFailure
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -99,25 +100,18 @@ spec:
         - name: RCLONE_CONFIG
           value: /secrets/rclone.conf
       command:
-        - micromamba
-        - run
-        - -n
-        - base
-        - python
-        - /opt/repo/$(SCRIPT_PATH)
-        - -f$(FF)
-        - -t$(TARGET)
-        - -r$(REPLICA)
-        - -w$(WINDOW)
-        - -o/results
+        - /bin/sh
+        - -c
+        - |
+          micromamba run -n base python /opt/repo/$(SCRIPT_PATH) -f$(FF) -t$(TARGET) -r$(REPLICA) -w$(WINDOW) -o/results
+          rclone copy --update /results nrp-internal:proteinbenchmark-jm-bucket/results
       lifecycle:
         preStop:
           exec:
             command:
-              - rclone
-              - copy
-              - /results
-              - nrp-internal:proteinbenchmark-jm-bucket/results
+              - /bin/sh
+              - -c
+              - rclone copy --update /results nrp-internal:proteinbenchmark-jm-bucket/results 2>&1 > /proc/1/fd/1
   volumes:
     - name: rclone-config
       secret:
