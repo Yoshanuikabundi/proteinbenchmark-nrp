@@ -19,6 +19,17 @@ The `run-umbrella-windows.py` script copies the template YAML file for each wind
 2. The `$SCRIPT_COMMIT` and `$SCRIPT_PATH` environment variables are set to ensure that the current version of the `umbrella-scripts/run-umbrella-window.py` script is run in the container (it should be committed and pushed before executing `run-umbrella-windows.py`)
 3. Other environment variables are set to specify the target, force field, replica and window.
 
+## Configuration
+
+| To configure...                      | Look in the file...                  |
+|--------------------------------------|--------------------------------------|
+| `proteinbenchmark` branch/commit/rev | Dockerfile (requires image rebuild)  |
+| Number of replics                    | run-umbrella-windows.py              |
+| Number of windows                    | run-umbrella-windows.py              |
+| Target to benchmark                  | run-umbrella-windows.py              |
+| Force field to benchmark             | run-umbrella-windows.py              |
+| Resources of each worker pod         | proteinbenchmark_jm_template.yaml    |
+
 ## Providence
 
 The actual Kubernetes manifest executed by NRP is stored in `results/$TARGET-$FF/replica-$REPLICA/$TARGET-$FF-$REPLICA-$WINDOW.yaml`. If this file already exists, `run-umbrella-windows.py` will refuse to overwrite it to avoid deleting providence of a previous run when `run-umbrella-windows.py` has not been updated correctly. The path, repository, and commit hash of the script used in this manifest are stored in the manifest YAML file, so combined with this Git repository this should be sufficient information to reproduce a run.
