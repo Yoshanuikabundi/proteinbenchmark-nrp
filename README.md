@@ -34,3 +34,20 @@ rclone copy nrp:proteinbenchmark-jm-bucket/results results
 ```
 
 I don't actually know if NRP buckets are available per namespace or per user, so you might need your own bucket. S3 can also be set up to provide public HTTP access to files if that's preferable!
+
+## Useful commands and websites
+
+Visualization of GPU utilisation: https://grafana.nrp-nautilus.io/d/dRG9q0Ymz/k8s-compute-resources-namespace-gpus?var-namespace=openforcefield&orgId=1&refresh=auto&from=now-1h&to=now
+
+Visualization of CPU utilisation: https://grafana.nrp-nautilus.io/d/85a562078cdf77779eaa1add43ccec1e/kubernetes-compute-resources-namespace-pods?orgId=1&refresh=10s&var-datasource=default&var-cluster=&var-namespace=openforcefield
+
+NRP Nautilus docs: https://ucsd-prp.gitlab.io/
+
+NRP GitLab instance: https://gitlab.nrp-nautilus.io/
+
+Useful commands:
+
+```bash
+# Get the status of an underway production simulation
+kubectl exec -it proteinbenchmark-jm-${TARGET}-${FF}-${REPLICA}-${WINDOW} -- cat /results/${TARGET}-${FF}/replica-${REPLICA}/window-${WINDOW}/${TARGET}-${FF}-production.out
+```
