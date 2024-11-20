@@ -53,9 +53,10 @@ spec:
           git clone https://github.com/Yoshanuikabundi/proteinbenchmark-nrp.git repo
           cd repo
           git checkout $SCRIPT_COMMIT
-          mkdir $PWD/../results
-          rclone mount --daemon nrp-internal:proteinbenchmark-jm-bucket/results $PWD/../results
-          micromamba run -n base python $SCRIPT_PATH -f $FF -t $TARGET -r $REPLICA -w $WINDOW -o $PWD/../results
+          mkdir results
+          rclone mount --daemon nrp-internal:proteinbenchmark-jm-bucket/results results
+          ls results/gb3-null-0.0.3-pair-opc3/setup/
+          micromamba run -n base python $SCRIPT_PATH -f $FF -t $TARGET -r $REPLICA -w $WINDOW -o results
   volumes:
     - name: rclone-config
       secret:
