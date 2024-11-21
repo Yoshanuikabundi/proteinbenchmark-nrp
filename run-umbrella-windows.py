@@ -31,20 +31,20 @@ def main():
                 / f"{TARGET}-{FF}-{replica}-{window:02d}.yaml"
             )
 
-            manifest = rename_template(
-                add_env_to_template(
-                    template,
-                    {
-                        "REPLICA": replica,
-                        "TARGET": TARGET,
-                        "FF": FF,
-                        "WINDOW": window,
-                        "SCRIPT_COMMIT": get_script_commit(),
-                        "SCRIPT_PATH": SCRIPT_PATH,
-                    },
-                ),
-                prepend=f"pb-{INITIALS}",
-                append=f"{TARGET}-{FF}-{replica}-{window:02d}".replace(".", ""),
+            manifest = add_env_to_template(
+                template,
+                {
+                    "REPLICA": replica,
+                    "TARGET": TARGET,
+                    "FF": FF,
+                    "WINDOW": window,
+                    "SCRIPT_COMMIT": get_script_commit(),
+                    "SCRIPT_PATH": SCRIPT_PATH,
+                },
+            )
+
+            manifest.setdefault("metadata", {})["name"] = (
+                f"pb-{INITIALS}-{TARGET}-{FF}-{replica}-{window:02d}".replace(".", "")
             )
 
             requested_resources = {"memory": "4Gi", "cpu": "1", "nvidia.com/gpu": "1"}
@@ -118,30 +118,6 @@ def get_containers(manifest):
         yield container
     for container in manifest["spec"].get("containers", []):
         yield container
-
-
-def rename_template(
-    template: dict,
-    prepend: str | None = None,
-    append: str | None = None,
-) -> dict:
-    output = deepcopy(template)
-    rename_entry(output, ["metadata", "name"], prepend=prepend, append=append)
-    # for container in get_containers(output):
-    #     rename_entry(container, ["name"], prepend=prepend, append=append)
-    return output
-
-
-def rename_entry(
-    data: dict,
-    path: list[str],
-    prepend: str | None = None,
-    append: str | None = None,
-):
-    for key in path[:-1]:
-        data = data.setdefault(key, {})
-    key = path[-1]
-    data[key] = "-".join(s for s in [prepend, data.get(key), append] if s is not None)
 
 
 def add_env_to_template(template: dict, envvars: dict[str, Any]) -> dict:
