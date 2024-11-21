@@ -29,6 +29,7 @@ def main():
                 / f"replica-{replica}"
                 / f"{TARGET}-{FF}-{replica}-{window:02d}.yaml"
             )
+            k8s_manifest_path.parent.mkdir(parents=True, exist_ok=True)
 
             manifest = add_env_to_template(
                 template,
