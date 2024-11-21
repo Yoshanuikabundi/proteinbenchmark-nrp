@@ -18,4 +18,4 @@ RUN micromamba install click openff-nagl 'cuda-version==12.4' 'python<3.12' -y -
     micromamba list
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
-RUN pip install git+https://github.com/${REPO}.git@${BRANCH}
+# RUN pip install git+https://github.com/${REPO}.git@${BRANCH}

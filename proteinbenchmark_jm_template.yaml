@@ -103,6 +103,7 @@ spec:
         - /bin/sh
         - -c
         - |
+          micromamba run -n base pip install git+https://github.com/openforcefield/proteinbenchmark.git@nagl
           micromamba run -n base python /opt/repo/$(SCRIPT_PATH) -f$(FF) -t$(TARGET) -r$(REPLICA) -w$(WINDOW) -o/results
           rclone copy --update /results nrp-internal:proteinbenchmark-jm-bucket/results
       lifecycle:
