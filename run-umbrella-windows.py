@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 
+INITIALS = "jm"
 SCRIPT_PATH = Path("umbrella-scripts/run-umbrella-window.py")
 LOCAL_RESULT_DIR = Path("results")
 TARGET = "gb3"
@@ -17,10 +18,12 @@ N_WINDOWS = 1
 
 
 def main():
-    with open("proteinbenchmark_jm_template.yaml") as f:
+    with open("k8s_template.yaml") as f:
         template = yaml.safe_load(f)
     for replica in range(1, N_REPLICAS + 1):
         for window in range(N_WINDOWS):
+            replica = 3
+            window = 14
             k8s_manifest_path = (
                 LOCAL_RESULT_DIR
                 / f"{TARGET}-{FF}"
@@ -40,7 +43,8 @@ def main():
                         "SCRIPT_PATH": SCRIPT_PATH,
                     },
                 ),
-                append=f"-{TARGET}-{FF}-{replica}-{window:02d}".replace(".", ""),
+                prepend=f"pb-{INITIALS}",
+                append=f"{TARGET}-{FF}-{replica}-{window:02d}".replace(".", ""),
             )
 
             requested_resources = {"memory": "4Gi", "cpu": "1", "nvidia.com/gpu": "1"}
@@ -116,12 +120,28 @@ def get_containers(manifest):
         yield container
 
 
-def rename_template(template: dict, append: str) -> dict:
+def rename_template(
+    template: dict,
+    prepend: str | None = None,
+    append: str | None = None,
+) -> dict:
     output = deepcopy(template)
-    output["metadata"]["name"] += append
-    for container in get_containers(output):
-        container["name"] += append
+    rename_entry(output, ["metadata", "name"], prepend=prepend, append=append)
+    # for container in get_containers(output):
+    #     rename_entry(container, ["name"], prepend=prepend, append=append)
     return output
+
+
+def rename_entry(
+    data: dict,
+    path: list[str],
+    prepend: str | None = None,
+    append: str | None = None,
+):
+    for key in path[:-1]:
+        data = data.setdefault(key, {})
+    key = path[-1]
+    data[key] = "-".join(s for s in [prepend, data.get(key), append] if s is not None)
 
 
 def add_env_to_template(template: dict, envvars: dict[str, Any]) -> dict:
