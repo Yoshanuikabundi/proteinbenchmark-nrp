@@ -18,6 +18,7 @@ N_WINDOWS = 1
 
 
 def main():
+    script_commit = get_script_commit(SCRIPT_PATH)
     with open("k8s_template.yaml") as f:
         template = yaml.safe_load(f)
     for replica in range(1, N_REPLICAS + 1):
@@ -36,7 +37,7 @@ def main():
                     "TARGET": TARGET,
                     "FF": FF,
                     "WINDOW": window,
-                    "SCRIPT_COMMIT": get_script_commit(),
+                    "SCRIPT_COMMIT": script_commit,
                     "SCRIPT_PATH": SCRIPT_PATH,
                 },
             )
@@ -71,10 +72,10 @@ def main():
                 )
 
 
-def get_script_commit() -> str:
+def get_script_commit(script_path: Path) -> str:
     script_is_ignored = (
         subprocess.run(
-            ["git", "check-ignore", SCRIPT_PATH],
+            ["git", "check-ignore", script_path],
             check=False,
             text=True,
             capture_output=True,
@@ -83,7 +84,7 @@ def get_script_commit() -> str:
     )
     script_is_checked_in = (
         subprocess.run(
-            ["git", "ls-files", "--error-unmatch", SCRIPT_PATH],
+            ["git", "ls-files", "--error-unmatch", script_path],
             check=False,
             text=True,
             capture_output=True,
@@ -92,7 +93,7 @@ def get_script_commit() -> str:
     )
     script_is_unmodified = (
         subprocess.run(
-            ["git", "status", "--porcelain", SCRIPT_PATH],
+            ["git", "status", "--porcelain", script_path],
             check=True,
             text=True,
             capture_output=True,
@@ -103,7 +104,7 @@ def get_script_commit() -> str:
     if not (script_is_checked_in and script_is_unmodified) or script_is_ignored:
         print(script_is_checked_in, script_is_unmodified, script_is_ignored)
         raise ValueError(
-            f"script {SCRIPT_PATH} must be checked in to git so that the Kubernetes job can find it"
+            f"script {script_path} must be checked in to git so that the Kubernetes job can find it"
         )
 
     return subprocess.run(
