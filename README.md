@@ -18,7 +18,7 @@ If all the above succeeded, the pod completes. If the umbrella sampling window f
 
 The `run-umbrella-windows.py` script copies the template YAML file for each window with the following modifications:
 
-1. The target, force field, replica and window are all appended to the name of each container
+1. The name of the pod is set. It describes the user's initials, as well as the target, force field, replica and window. This ensures that all pods have a descriptive, unique and accurate name.
 2. The `$SCRIPT_COMMIT` and `$SCRIPT_PATH` environment variables are set to ensure that the current version of the `umbrella-scripts/run-umbrella-window.py` script is run in the container (it should be committed and pushed before executing `run-umbrella-windows.py`)
 3. Other environment variables are set to specify the target, force field, replica and window.
 
