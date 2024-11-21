@@ -38,7 +38,7 @@ spec:
         - |
           set -euf
           cd /opt/repo
-          git clone https://gitlab.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp.git /opt/repo || true
+          git clone https://github.com/openforcefield/proteinbenchmark-nrp.git /opt/repo || true
           git checkout $SCRIPT_COMMIT
       volumeMounts:
         - mountPath: /opt/repo
@@ -72,8 +72,7 @@ spec:
           subPath: rclone.conf
   containers:
     - name: proteinbenchmark-jm
-      image: gitlab-registry.nrp-nautilus.io/josh.mitchell/proteinbenchmark-nrp:latest
-      # image: ghcr.io/lilyminium/openff-images:proteinbenchmark-simulation-nagl-rclone-cuda12.4
+      image: ghcr.io/openforcefield/proteinbenchmark-nrp:latest
       resources:
         limits:
           memory: "5Gi"
