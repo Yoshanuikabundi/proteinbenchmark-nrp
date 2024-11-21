@@ -8,10 +8,11 @@ The pod performs the following actions:
 
 1. Clone this repo to `/opt/repo` and check out the commit specified in `$SCRIPT_COMMIT`
 2. Copy the contents of the `/results` directory of the `proteinbenchmark-jm-bucket` S3 bucket to `/results`
-3. Execute the command `/opt/repo/$SCRIPT_PATH` with the appropriate command line flags to execute an umbrella sampling window
-4. Copy any contents of the `/results` directory that are newer than the corresponding file in the S3 bucket back to the S3 bucket
+3. Pip install the `proteinbenchmark` library from the GitHub repository
+4. Execute the command `/opt/repo/$SCRIPT_PATH` with the appropriate command line flags to execute an umbrella sampling window
+5. Copy any contents of the `/results` directory that are newer than the corresponding file in the S3 bucket back to the S3 bucket
 
-If all the above succeeded, the pod completes. If the umbrella sampling window failed, step 4 is executed before the pod restarts. This is important because Kubernetes is "allowed" to stop or restart pods whenever it wants, for example to allow a higher priority job to take the pod's resources.
+If all the above succeeded, the pod completes. If the umbrella sampling window failed, step 5 is executed before the pod restarts. This is important because Kubernetes is "allowed" to stop or restart pods whenever it wants, for example to allow a higher priority job to take the pod's resources.
 
 The `run-umbrella-windows.py` script copies the template YAML file for each window with the following modifications:
 
@@ -23,12 +24,15 @@ The `run-umbrella-windows.py` script copies the template YAML file for each wind
 
 | To configure...                      | Look in the file...                  |
 |--------------------------------------|--------------------------------------|
-| `proteinbenchmark` branch/commit/rev | Dockerfile (requires image rebuild)  |
-| Number of replics                    | run-umbrella-windows.py              |
+| Conda environment                    | Dockerfile (requires [image rebuild])|
+| Number of replicas                   | run-umbrella-windows.py              |
 | Number of windows                    | run-umbrella-windows.py              |
 | Target to benchmark                  | run-umbrella-windows.py              |
 | Force field to benchmark             | run-umbrella-windows.py              |
 | Resources of each worker pod         | proteinbenchmark_jm_template.yaml    |
+| `proteinbenchmark` branch/commit/rev | proteinbenchmark_jm_template.yaml    |
+
+[image rebuild]: https://github.com/openforcefield/proteinbenchmark-nrp/actions/workflows/rebuild-docker.yaml
 
 ## Providence
 
@@ -41,7 +45,7 @@ Results are stored in an S3 bucket provided by NRP. This includes all input and 
 To copy files from the bucket to your machine, first ask the NRP admins on Matrix to give you S3 credentials, the set up RClone with your credentials, and then run a command like:
 
 ```bash
-rclone copy nrp:proteinbenchmark-jm-bucket/results results
+rclone copy --progress nrp:proteinbenchmark-jm-bucket/results results
 ```
 
 I don't actually know if NRP buckets are available per namespace or per user, so you might need your own bucket. S3 can also be set up to provide public HTTP access to files if that's preferable!
