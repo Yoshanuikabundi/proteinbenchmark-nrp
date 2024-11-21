@@ -94,11 +94,14 @@ kubectl get nodes -L nvidia.com/gpu.product,nvidia.com/cuda.runtime.major,nvidia
 
 ### Initialization containers and root
 
-Our Docker image is based on the [Micromamba docker image]. This makes it very easy and fast to install packages and environments through Conda. Unfortunately, it also means that we don't have access to the root user in our main container. This is a bit of a pain because Kubernetes mounts all volumes as owned by root with 755 permissions (owner writes, group/other reads).
+Our Docker image is based on the [Micromamba docker image]. This makes it very easy and fast to install packages and environments through Conda. Unfortunately, it also means that we don't have access to the root user in our main container. This is a bit of a pain because Kubernetes mounts all volumes as owned by root with 755/644 permissions (owner writes, group/other reads).
 
 To get around this limitation, we perform a lot of initialization in other containers prior to spinning up the main container. Firstly, we clone this repository with the root-enabled `alpine/git` image in a container called `init-git`, and then we spin up `init-rclone` with the `rclone/rclone` image to download the results directory from S3 and set its permissions so that the Micromamba user can write to it. Once all the files are in place and properly permissioned, the `main` container with our custom image can take over.
 
+There should be a way to do this [more elegantly], but I couldn't get it to work and the current strategy is... fine.
+
 [Micromamba docker image]: https://micromamba-docker.readthedocs.io/en/latest/
+[more elegantly]: https://stackoverflow.com/questions/43544370/kubernetes-how-to-set-volumemount-user-group-and-file-permissions
 
 ## Useful commands and links
 
