@@ -100,7 +100,7 @@ To get around this limitation, we perform a lot of initialization in other conta
 
 [Micromamba docker image]: https://micromamba-docker.readthedocs.io/en/latest/
 
-## Useful commands and websites
+## Useful commands and links
 
 Visualization of GPU utilisation: https://grafana.nrp-nautilus.io/d/dRG9q0Ymz/k8s-compute-resources-namespace-gpus?var-namespace=openforcefield&orgId=1&refresh=auto&from=now-1h&to=now
 
