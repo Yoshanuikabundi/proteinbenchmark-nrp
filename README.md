@@ -39,10 +39,6 @@ To rebuild the docker image according to the `Dockerfile` currently checked in t
 
 [image rebuild]: https://github.com/openforcefield/proteinbenchmark-nrp/actions/workflows/rebuild-docker.yaml
 
-## Providence
-
-The actual Kubernetes manifest executed by NRP is stored in `results/$TARGET-$FF/replica-$REPLICA/$TARGET-$FF-$REPLICA-$WINDOW.yaml`. If this file already exists, `run-umbrella-windows.py` will refuse to overwrite it to avoid deleting providence of a previous run when `run-umbrella-windows.py` has not been updated correctly. The path, repository, and commit hash of the script used in this manifest are stored in the manifest YAML file, so combined with this Git repository this should be sufficient information to reproduce a run.
-
 ## Accessing results
 
 Results are stored in an S3 bucket provided by NRP. This includes all input and output files from the pod itself. The contents of this bucket are copied to the pod during initialization, and copied back to the bucket when a window is completed or the pod crashes. The `--update` switch is passed to RClone for this copy, so only files that have been changed on the pod should be copied, but I haven't tested this. This should eventually be fine tuned so that only the files necessary for a particular pod are copied.
@@ -75,7 +71,13 @@ RClone *should* work with globs/wildcards, just remember to escape them so your 
 
 S3 can also be set up to provide public HTTP access to files if that's preferable!
 
-## CUDA version
+## Minutiae
+
+### Providence
+
+The actual Kubernetes manifest executed by NRP is stored in `results/$TARGET-$FF/replica-$REPLICA/$TARGET-$FF-$REPLICA-$WINDOW.yaml`. If this file already exists, `run-umbrella-windows.py` will refuse to overwrite it to avoid deleting providence of a previous run when `run-umbrella-windows.py` has not been updated correctly. The path, repository, and commit hash of the script used in this manifest are stored in the manifest YAML file, so combined with this Git repository this should be sufficient information to reproduce a run.
+
+### CUDA version
 
 The CUDA version is specified in three places. I don't know if all three have to be the same or how flexible this is, but here's where they are so you can find them:
 
@@ -90,6 +92,14 @@ To see what versions of CUDA are available on NRP at the moment, take a look at 
 kubectl get nodes -L nvidia.com/gpu.product,nvidia.com/cuda.runtime.major,nvidia.com/cuda.runtime.minor -l nvidia.com/gpu.product
 ```
 
+### Initialization containers and root
+
+Our Docker image is based on the [Micromamba docker image]. This makes it very easy and fast to install packages and environments through Conda. Unfortunately, it also means that we don't have access to the root user in our main container. This is a bit of a pain because Kubernetes mounts all volumes as owned by root with 755 permissions (owner writes, group/other reads).
+
+To get around this limitation, we perform a lot of initialization in other containers prior to spinning up the main container. Firstly, we clone this repository with the root-enabled `alpine/git` image in a container called `init-git`, and then we spin up `init-rclone` with the `rclone/rclone` image to download the results directory from S3 and set its permissions so that the Micromamba user can write to it. Once all the files are in place and properly permissioned, the `main` container with our custom image can take over.
+
+[Micromamba docker image]: https://micromamba-docker.readthedocs.io/en/latest/
+
 ## Useful commands and websites
 
 Visualization of GPU utilisation: https://grafana.nrp-nautilus.io/d/dRG9q0Ymz/k8s-compute-resources-namespace-gpus?var-namespace=openforcefield&orgId=1&refresh=auto&from=now-1h&to=now
@@ -102,5 +112,11 @@ Useful commands:
 
 ```bash
 # Get the status of an underway production simulation
-kubectl exec -it pb-jm-${TARGET}-${FF}-${REPLICA}-${WINDOW} -- cat /results/${TARGET}-${FF}/replica-${REPLICA}/window-${WINDOW}/${TARGET}-${FF}-production.out
+kubectl exec pb-${INITIALS}-${TARGET}-${FF}-${REPLICA}-${WINDOW} -- cat /results/${TARGET}-${FF}/replica-${REPLICA}/window-${WINDOW}/${TARGET}-${FF}-production.out
+
+# Get a shell into a pod
+kubectl exec -it ${PODNAME} -- /bin/bash
+
+# View the logs (with timestamps) of a pod that just restarted, including its initialization containers
+kubectl logs ${PODNAME} --previous --all-containers --timestamps
 ```
