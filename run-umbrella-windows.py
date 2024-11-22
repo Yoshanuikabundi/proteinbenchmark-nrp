@@ -23,6 +23,8 @@ def main():
         template = yaml.safe_load(f)
     for replica in range(1, N_REPLICAS + 1):
         for window in range(N_WINDOWS):
+            replica = 3
+            window = 14
             k8s_manifest_path = (
                 LOCAL_RESULT_DIR
                 / f"{TARGET}-{FF}"
@@ -47,7 +49,7 @@ def main():
             )
 
             requested_resources = {"memory": "4Gi", "cpu": "1", "nvidia.com/gpu": "1"}
-            manifest["spec"]["containers"][-1]["resources"] = {
+            manifest["spec"]["template"]["spec"]["containers"][-1]["resources"] = {
                 "limits": dict(requested_resources),
                 "requests": dict(requested_resources),
             }
@@ -115,9 +117,9 @@ def get_script_commit(script_path: Path) -> str:
 
 
 def get_containers(manifest):
-    for container in manifest["spec"].get("initContainers", []):
+    for container in manifest["spec"]["template"]["spec"].get("initContainers", []):
         yield container
-    for container in manifest["spec"].get("containers", []):
+    for container in manifest["spec"]["template"]["spec"].get("containers", []):
         yield container
 
 

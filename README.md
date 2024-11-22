@@ -4,9 +4,9 @@ Scripts for running proteinbenchmarks on NRP.
 
 To run a simulation, edit the constants (with names in SHOUTING_CASE) at the top of `run-umbrella-windows.py`, then execute `run-umbrella-windows.py`. Please remember to set the `INITIALS` variable to your own initials so that everyone knows who to contact in case something goes wrong!
 
-Each simulation window is run in its own pod. The general outline of a pod is described by `k8s_template.yaml`, but this file is used as a template by the `run-umbrella-windows.py` script to produce Kubernetes manifest files for each simulation.
+Each simulation window is run in its own job consisting of a single pod. The job manages pod failures and allows it to run for longer than 6 hours. The general outline of both job and pod is described by `k8s_template.yaml`, but this file is used as a template by the `run-umbrella-windows.py` script to produce Kubernetes manifest files for each simulation.
 
-The pod performs the following actions:
+Each pod performs the following actions:
 
 1. Clone this repo to `/opt/repo` and check out the commit specified in `$SCRIPT_COMMIT`
 2. Copy the contents of the `/results` directory of the `proteinbenchmark-jm-bucket` S3 bucket to `/results`
@@ -14,11 +14,11 @@ The pod performs the following actions:
 4. Execute the command `/opt/repo/$SCRIPT_PATH` with the appropriate command line flags to execute an umbrella sampling window
 5. Copy any contents of the `/results` directory that are newer than the corresponding file in the S3 bucket back to the S3 bucket
 
-If all the above succeeded, the pod completes. If the umbrella sampling window failed, step 5 is executed before the pod restarts. This is important because Kubernetes is "allowed" to stop or restart pods whenever it wants, for example to allow a higher priority job to take the pod's resources.
+If all the above succeeded, the job completes. If the umbrella sampling window failed, step 5 is executed before the pod restarts. This is important because Kubernetes is "allowed" to stop or restart pods whenever it wants, for example to allow a higher priority job to take the pod's resources.
 
 The `run-umbrella-windows.py` script copies the template YAML file for each window with the following modifications:
 
-1. The name of the pod is set. It describes the user's initials, as well as the target, force field, replica and window. This ensures that all pods have a descriptive, unique and accurate name.
+1. The name of the job is set. It describes the user's initials, as well as the target, force field, replica and window. This ensures that all jobs have a descriptive, unique and accurate name.
 2. The `$SCRIPT_COMMIT` and `$SCRIPT_PATH` environment variables are set to ensure that the current version of the `umbrella-scripts/run-umbrella-window.py` script is run in the container (it should be committed and pushed before executing `run-umbrella-windows.py`)
 3. Other environment variables are set to specify the target, force field, replica and window.
 
@@ -115,10 +115,13 @@ Useful commands:
 
 ```bash
 # Get the status of an underway production simulation
-kubectl exec pb-${INITIALS}-${TARGET}-${FF}-${REPLICA}-${WINDOW} -- cat /results/${TARGET}-${FF}/replica-${REPLICA}/window-${WINDOW}/${TARGET}-${FF}-production.out
+kubectl exec job/pb-${INITIALS}-${TARGET}-${FF}-${REPLICA}-${WINDOW} -- cat /results/${TARGET}-${FF}/replica-${REPLICA}/window-${WINDOW}/${TARGET}-${FF}-production.out
 
 # Get a shell into a pod
 kubectl exec -it ${PODNAME} -- /bin/bash
+
+# Get a shell into a job
+kubectl exec -it job/${JOBNAME} -- /bin/bash
 
 # View the logs (with timestamps) of a pod that just restarted, including its initialization containers
 kubectl logs ${PODNAME} --previous --all-containers --timestamps
