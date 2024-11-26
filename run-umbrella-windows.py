@@ -39,6 +39,12 @@ def main():
                     "PROTBENCH_WINDOW": window,
                     "PROTBENCH_SCRIPT_COMMIT": script_commit,
                     "PROTBENCH_SCRIPT_PATH": SCRIPT_PATH,
+                    "PROTBENCH_REQUIRED_FILES": "\n".join([
+                        f"{TARGET}-{FF}/setup/",
+                        f"{TARGET}-{FF}/replica-{replica}/{TARGET}-{FF}-equilibration-1.xml",
+                        f"{TARGET}-{FF}/replica-{replica}/{TARGET}-{FF}-window-{window}.pdb",
+                        f"{TARGET}-{FF}/replica-{replica}/window-{window}/",
+                    ]),
                 },
             )
 

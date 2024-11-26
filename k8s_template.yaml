@@ -39,7 +39,7 @@ spec:
               set -euf
               cd /opt/repo
               git clone https://github.com/openforcefield/proteinbenchmark-nrp.git /opt/repo || true
-              git checkout $SCRIPT_COMMIT
+              git checkout $PROTBENCH_SCRIPT_COMMIT
           volumeMounts:
             - mountPath: /opt/repo
               name: repo-vol
@@ -49,9 +49,11 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "200m"
+              ephemeral-storage: "20Gi"
             requests:
               memory: "1Gi"
               cpu: "200m"
+              ephemeral-storage: "20Gi"
           env:
             - name: RCLONE_CONFIG
               value: /secrets/rclone.conf
@@ -60,8 +62,14 @@ spec:
             - "-c"
             - |
               set -euf
+              rclone --version
               echo "about to clone"
-              rclone copy --progress nrp-internal:proteinbenchmark-jm-bucket/results /results
+              IFS=$'\n'
+              for FILE in ${PROTBENCH_REQUIRED_FILES}; do
+                echo "cloning to /results/$FILE"
+                rclone copyto --progress nrp-internal:proteinbenchmark-jm-bucket/results/$FILE /results/$FILE
+              done
+              unset IFS
               echo "done cloning"
               ls /results
               chmod -R 777 /results
@@ -80,10 +88,12 @@ spec:
               memory: "5Gi"
               cpu: "1"
               nvidia.com/gpu: 1
+              ephemeral-storage: "20Gi"
             requests:
               memory: "5Gi"
               cpu: "1"
               nvidia.com/gpu: 1
+              ephemeral-storage: "20Gi"
           volumeMounts:
             - name: rclone-config
               mountPath: /secrets/rclone.conf
@@ -109,7 +119,7 @@ spec:
             - -c
             - |
               micromamba run -n base pip install git+https://github.com/openforcefield/proteinbenchmark.git@nagl
-              micromamba run -n base python /opt/repo/$(SCRIPT_PATH) -o/results
+              micromamba run -n base python /opt/repo/$(PROTBENCH_SCRIPT_PATH) -o/results
               rclone copy --update /results nrp-internal:proteinbenchmark-jm-bucket/results
           lifecycle:
             preStop:
