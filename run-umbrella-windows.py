@@ -22,12 +22,14 @@ def main():
     with open("k8s_template.yaml") as f:
         template = yaml.safe_load(f)
     for replica in range(1, N_REPLICAS + 1):
-        for window in range(N_WINDOWS):
+        for window_int in range(N_WINDOWS):
+            window = f"{window_int:02d}"
+
             k8s_manifest_path = (
                 LOCAL_RESULT_DIR
                 / f"{TARGET}-{FF}"
                 / f"replica-{replica}"
-                / f"{TARGET}-{FF}-{replica}-{window:02d}.yaml"
+                / f"{TARGET}-{FF}-{replica}-{window}.yaml"
             )
 
             manifest = add_env_to_template(
@@ -49,7 +51,7 @@ def main():
             )
 
             manifest.setdefault("metadata", {})["name"] = (
-                f"pb-{INITIALS}-{TARGET}-{FF}-{replica}-{window:02d}".replace(".", "")
+                f"pb-{INITIALS}-{TARGET}-{FF}-{replica}-{window}".replace(".", "")
             )
 
             requested_resources = {"memory": "4Gi", "cpu": "1", "nvidia.com/gpu": "1"}
