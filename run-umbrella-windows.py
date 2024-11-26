@@ -35,12 +35,12 @@ def main():
             manifest = add_env_to_template(
                 template,
                 {
-                    "REPLICA": replica,
-                    "TARGET": TARGET,
-                    "FF": FF,
-                    "WINDOW": window,
-                    "SCRIPT_COMMIT": script_commit,
-                    "SCRIPT_PATH": SCRIPT_PATH,
+                    "PROTBENCH_REPLICA": replica,
+                    "PROTBENCH_TARGET": TARGET,
+                    "PROTBENCH_FF": FF,
+                    "PROTBENCH_WINDOW": window,
+                    "PROTBENCH_SCRIPT_COMMIT": script_commit,
+                    "PROTBENCH_SCRIPT_PATH": SCRIPT_PATH,
                 },
             )
 

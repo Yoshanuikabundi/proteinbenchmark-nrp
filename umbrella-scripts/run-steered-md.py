@@ -25,6 +25,7 @@ from proteinbenchmark.simulation_parameters import *
     type=click.STRING,
     default="null-0.0.3-pair-opc3",
     show_default=True,
+    envvar='PROTBENCH_FF'
     help="Name of force field used to sample the trajectory.",
 )
 @click.option(
@@ -41,6 +42,7 @@ from proteinbenchmark.simulation_parameters import *
     type=click.INT,
     default=1,
     show_default=True,
+    envvar='PROTBENCH_REPLICA'
     help="Replica number for this target and force field to read.",
 )
 @click.option(
@@ -49,6 +51,7 @@ from proteinbenchmark.simulation_parameters import *
     type=click.STRING,
     default="gb3",
     show_default=True,
+    envvar='PROTBENCH_TARGET'
     help="Name of benchmark target.",
 )
 def main(
