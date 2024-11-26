@@ -54,12 +54,6 @@ def main():
                 f"pb-{INITIALS}-{TARGET}-{FF}-{replica}-{window}".replace(".", "")
             )
 
-            requested_resources = {"memory": "4Gi", "cpu": "1", "nvidia.com/gpu": "1"}
-            manifest["spec"]["template"]["spec"]["containers"][-1]["resources"] = {
-                "limits": dict(requested_resources),
-                "requests": dict(requested_resources),
-            }
-
             if "--dry-run" in sys.argv:
                 yaml.safe_dump(
                     manifest,
