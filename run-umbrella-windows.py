@@ -23,8 +23,6 @@ def main():
         template = yaml.safe_load(f)
     for replica in range(1, N_REPLICAS + 1):
         for window in range(N_WINDOWS):
-            replica = 3
-            window = 14
             k8s_manifest_path = (
                 LOCAL_RESULT_DIR
                 / f"{TARGET}-{FF}"
