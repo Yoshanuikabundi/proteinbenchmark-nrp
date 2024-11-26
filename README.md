@@ -8,19 +8,22 @@ Each simulation window is run in its own job consisting of a single pod. The job
 
 Each pod performs the following actions:
 
-1. Clone this repo to `/opt/repo` and check out the commit specified in `$SCRIPT_COMMIT`
-2. Copy the contents of the `/results` directory of the `proteinbenchmark-jm-bucket` S3 bucket to `/results`
+1. Clone this repo to `/opt/repo` and check out the commit specified in `$PROTBENCH_SCRIPT_COMMIT`
+2. Copy the required contents of the `/results` directory of the `proteinbenchmark-jm-bucket` S3 bucket to `/results`
 3. Pip install the `proteinbenchmark` library from the GitHub repository
-4. Execute the command `/opt/repo/$SCRIPT_PATH` with the appropriate command line flags to execute an umbrella sampling window
+4. Execute the command `/opt/repo/$PROTBENCH_SCRIPT_PATH -o/results` to execute an umbrella sampling window (or some other simulation)
 5. Copy any contents of the `/results` directory that are newer than the corresponding file in the S3 bucket back to the S3 bucket
 
 If all the above succeeded, the job completes. If the umbrella sampling window failed, step 5 is executed before the pod restarts. This is important because Kubernetes is "allowed" to stop or restart pods whenever it wants, for example to allow a higher priority job to take the pod's resources.
 
+Note that step 2 will not fail if some required files were missing from the S3 bucket. This is because required files include outputs from previous pods that should be continued from the current pod. These outputs are not present at the start of the first pod's run, so the pod is tolerant of all files' absence. Missing files will cause errors when they are required by the script.
+
 The `run-umbrella-windows.py` script copies the template YAML file for each window with the following modifications:
 
 1. The name of the job is set. It describes the user's initials, as well as the target, force field, replica and window. This ensures that all jobs have a descriptive, unique and accurate name.
-2. The `$SCRIPT_COMMIT` and `$SCRIPT_PATH` environment variables are set to ensure that the current version of the `umbrella-scripts/run-umbrella-window.py` script is run in the container (it should be committed and pushed before executing `run-umbrella-windows.py`)
-3. Other environment variables are set to specify the target, force field, replica and window.
+2. The `$PROTBENCH_SCRIPT_COMMIT` and `$PROTBENCH_SCRIPT_PATH` environment variables are set to ensure that the current version of the `umbrella-scripts/run-umbrella-window.py` script is run in the container (it should be committed and pushed before executing `run-umbrella-windows.py`)
+3. The `$PROTBENCH_REQUIRED_FILES` environment var is set to a newline-separated list of files required by the script, which will be copied from the S3 bucket in an initialization container
+3. Other environment variables are set to specify the target, force field, replica, window, and any other per-simulation configuration values. These environment variables should be consumed by the script.
 
 ## Configuration
 
@@ -32,6 +35,7 @@ The `run-umbrella-windows.py` script copies the template YAML file for each wind
 | Number of windows                    | run-umbrella-windows.py              |
 | Target to benchmark                  | run-umbrella-windows.py              |
 | Force field to benchmark             | run-umbrella-windows.py              |
+| Files required by worker pod         | run-umbrella-windows.py              |
 | Resources of each worker pod         | k8s_template.yaml                    |
 | `proteinbenchmark` branch/commit/rev | k8s_template.yaml                    |
 
