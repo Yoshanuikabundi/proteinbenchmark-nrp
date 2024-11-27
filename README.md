@@ -45,7 +45,7 @@ To rebuild the docker image according to the `Dockerfile` currently checked in t
 
 ## Accessing results
 
-Results are stored in an S3 bucket provided by NRP. This includes all input and output files from the pod itself. The contents of this bucket are copied to the pod during initialization, and copied back to the bucket when a window is completed or the pod crashes. The `--update` switch is passed to RClone for this copy, so only files that have been changed on the pod should be copied, but I haven't tested this. This should eventually be fine tuned so that only the files necessary for a particular pod are copied.
+Results are stored in an S3 bucket provided by NRP. This includes all input and output files from the pod itself. The required contents of this bucket are copied to the container's `/results` directory during initialization, and that entire directory is copied back to the bucket when a window is completed or the container stops. The `--update` switch is passed to RClone for this copy, so only files that have been changed on the pod should be copied.
 
 To copy files from the bucket to your machine, first download the rclone config file:
 
